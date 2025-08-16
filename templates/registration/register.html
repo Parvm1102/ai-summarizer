@@ -1,0 +1,144 @@
+{% extends 'base.html' %}
+
+{% block title %}Register - AI Summarizer{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
+        <div class="card shadow-custom">
+            <div class="card-header text-center">
+                <h3 class="mb-0">
+                    <i class="fas fa-user-plus me-2 text-primary"></i>
+                    Create Your Account
+                </h3>
+                <p class="text-muted mt-2 mb-0">Join AI Summarizer to get started</p>
+            </div>
+            <div class="card-body p-4">
+                <form method="post">
+                    {% csrf_token %}
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.first_name.id_for_label }}" class="form-label">First Name</label>
+                            {{ form.first_name }}
+                            {% if form.first_name.errors %}
+                                <div class="text-danger small">{{ form.first_name.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.last_name.id_for_label }}" class="form-label">Last Name</label>
+                            {{ form.last_name }}
+                            {% if form.last_name.errors %}
+                                <div class="text-danger small">{{ form.last_name.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="{{ form.username.id_for_label }}" class="form-label">Username</label>
+                        {{ form.username }}
+                        {% if form.username.errors %}
+                            <div class="text-danger small">{{ form.username.errors.0 }}</div>
+                        {% endif %}
+                        <div class="form-text">{{ form.username.help_text }}</div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="{{ form.email.id_for_label }}" class="form-label">Email Address</label>
+                        {{ form.email }}
+                        {% if form.email.errors %}
+                            <div class="text-danger small">{{ form.email.errors.0 }}</div>
+                        {% endif %}
+                        <div class="form-text">{{ form.email.help_text }}</div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.password1.id_for_label }}" class="form-label">Password</label>
+                            {{ form.password1 }}
+                            {% if form.password1.errors %}
+                                <div class="text-danger small">{{ form.password1.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.password2.id_for_label }}" class="form-label">Confirm Password</label>
+                            {{ form.password2 }}
+                            {% if form.password2.errors %}
+                                <div class="text-danger small">{{ form.password2.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <hr class="my-4">
+                    <h5 class="text-primary mb-3">
+                        <i class="fas fa-cog me-2"></i>AI & Email Configuration
+                    </h5>
+
+                    <div class="mb-3">
+                        <label for="{{ form.groq_api_key.id_for_label }}" class="form-label">
+                            Groq API Key <span class="text-danger">*</span>
+                        </label>
+                        {{ form.groq_api_key }}
+                        {% if form.groq_api_key.errors %}
+                            <div class="text-danger small">{{ form.groq_api_key.errors.0 }}</div>
+                        {% endif %}
+                        <div class="form-text">
+                            {{ form.groq_api_key.help_text }}
+                            <a href="https://console.groq.com/" target="_blank" class="text-primary">
+                                Get your API key here <i class="fas fa-external-link-alt"></i>
+                            </a>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="{{ form.email_host_user.id_for_label }}" class="form-label">
+                            Gmail Address <span class="text-danger">*</span>
+                        </label>
+                        {{ form.email_host_user }}
+                        {% if form.email_host_user.errors %}
+                            <div class="text-danger small">{{ form.email_host_user.errors.0 }}</div>
+                        {% endif %}
+                        <div class="form-text">{{ form.email_host_user.help_text }}</div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="{{ form.email_host_password.id_for_label }}" class="form-label">
+                            Gmail App Password <span class="text-danger">*</span>
+                        </label>
+                        {{ form.email_host_password }}
+                        {% if form.email_host_password.errors %}
+                            <div class="text-danger small">{{ form.email_host_password.errors.0 }}</div>
+                        {% endif %}
+                        <div class="form-text">
+                            {{ form.email_host_password.help_text }}
+                            <a href="https://support.google.com/accounts/answer/185833" target="_blank" class="text-primary">
+                                How to create an App Password <i class="fas fa-external-link-alt"></i>
+                            </a>
+                        </div>
+                    </div>
+
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <strong>Note:</strong> Your Gmail credentials are securely stored and used only for sending summary emails on your behalf.
+                    </div>
+
+                    <div class="d-grid gap-2 mt-4">
+                        <button type="submit" class="btn btn-primary btn-lg">
+                            <i class="fas fa-user-plus me-2"></i>Create Account
+                        </button>
+                    </div>
+                </form>
+
+                <div class="text-center mt-4">
+                    <p class="text-muted">
+                        Already have an account? 
+                        <a href="{% url 'login' %}" class="text-primary text-decoration-none">
+                            <strong>Sign in here</strong>
+                        </a>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

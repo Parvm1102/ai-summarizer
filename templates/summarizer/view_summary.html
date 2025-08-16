@@ -1,0 +1,539 @@
+{% extends 'base.html' %}
+{% load formatting_filters %}
+
+{% block title %}{{ summary.title }} - AI Summarizer{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="h2 text-dark mb-1">{{ summary.title }}</h1>
+        <div class="text-muted">
+            <span class="badge badge-{{ summary.status }}">{{ summary.get_status_display }}</span>
+            <span class="badge bg-secondary ms-1">{{ summary.get_summary_type_display }}</span>
+            <span class="ms-2">
+                <i class="fas fa-calendar me-1"></i>{{ summary.created_at|date:"M d, Y g:i A" }}
+            </span>
+            {% if summary.processing_time %}
+            <span class="ms-2">
+                <i class="fas fa-clock me-1"></i>{{ summary.processing_time|floatformat:1 }}s
+            </span>
+            {% endif %}
+        </div>
+    </div>
+    <div>
+        <a href="{% url 'summarizer:history' %}" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left me-2"></i>Back to History
+        </a>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Main Content -->
+    <div class="col-lg-8">
+        <!-- Original Text -->
+        <div class="card mb-4">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">
+                    <i class="fas fa-file-text me-2 text-primary"></i>Original Content
+                </h5>
+                <span class="text-muted small">{{ summary.word_count_original }} words</span>
+            </div>
+            <div class="card-body">
+                <div class="original-text" style="max-height: 300px; overflow-y: auto;">
+                    <div class="ai-content">{{ summary.original_text|smart_format }}</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- AI Summary -->
+        <div class="card mb-4">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">
+                    <i class="fas fa-magic me-2 text-success"></i>AI Generated Summary
+                </h5>
+                <div>
+                    {% if summary.word_count_summary %}
+                    <span class="text-muted small me-3">{{ summary.word_count_summary }} words</span>
+                    {% endif %}
+                    {% if summary.status == 'draft' %}
+                    <button class="btn btn-success btn-sm" id="generateBtn" onclick="generateSummary()">
+                        <i class="fas fa-magic me-2"></i>Generate Summary
+                    </button>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="card-body">
+                {% if summary.ai_generated_summary %}
+                    <div id="summaryContent">
+                        {% if summary.edited_summary %}
+                            <div class="alert alert-info small">
+                                <i class="fas fa-edit me-2"></i>
+                                <strong>Note:</strong> This summary has been edited by you.
+                            </div>
+                            <div class="edited-summary">
+                                <div class="ai-content">{{ summary.edited_summary|smart_format }}</div>
+                            </div>
+                        {% else %}
+                            <div class="ai-summary">
+                                <div class="ai-content">{{ summary.ai_generated_summary|smart_format }}</div>
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <!-- Edit Summary Section -->
+                    <div class="mt-3">
+                        <button class="btn btn-outline-primary btn-sm" onclick="toggleEditMode()">
+                            <i class="fas fa-edit me-2"></i>Edit Summary
+                        </button>
+                        
+                        <div id="editSection" class="mt-3" style="display: none;">
+                            <textarea class="form-control" id="editTextarea" rows="10">{{ summary.get_final_summary }}</textarea>
+                            <div class="mt-2">
+                                <button class="btn btn-success btn-sm" onclick="saveSummary()">
+                                    <i class="fas fa-save me-2"></i>Save Changes
+                                </button>
+                                <button class="btn btn-secondary btn-sm" onclick="cancelEdit()">
+                                    <i class="fas fa-times me-2"></i>Cancel
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                {% else %}
+                    <div class="text-center py-4">
+                        {% if summary.status == 'processing' %}
+                            <div class="spinner-border text-primary mb-3" role="status">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                            <h6 class="text-muted">Processing summary...</h6>
+                            <p class="text-muted small">This usually takes 5-30 seconds</p>
+                        {% elif summary.status == 'error' %}
+                            <i class="fas fa-exclamation-triangle fa-2x text-danger mb-3"></i>
+                            <h6 class="text-danger">Error generating summary</h6>
+                            <button class="btn btn-danger btn-sm mt-2" onclick="generateSummary()">
+                                <i class="fas fa-redo me-2"></i>Try Again
+                            </button>
+                        {% else %}
+                            <i class="fas fa-magic fa-2x text-muted mb-3"></i>
+                            <h6 class="text-muted">No summary generated yet</h6>
+                            <button class="btn btn-primary" onclick="generateSummary()">
+                                <i class="fas fa-magic me-2"></i>Generate Summary
+                            </button>
+                        {% endif %}
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Custom Prompt -->
+        {% if summary.custom_prompt %}
+        <div class="card mb-4">
+            <div class="card-header">
+                <h6 class="mb-0">
+                    <i class="fas fa-comment-dots me-2 text-info"></i>Custom Instructions
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="text-muted small">
+                    {{ summary.custom_prompt }}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Sidebar -->
+    <div class="col-lg-4">
+        <!-- Actions -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h6 class="mb-0">
+                    <i class="fas fa-cogs me-2 text-primary"></i>Actions
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    {% if summary.get_final_summary %}
+                    <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#shareModal">
+                        <i class="fas fa-share me-2"></i>Share via Email
+                    </button>
+                    {% endif %}
+                    
+                    {% if summary.status == 'draft' or summary.status == 'error' %}
+                    <button class="btn btn-primary" onclick="generateSummary()">
+                        <i class="fas fa-magic me-2"></i>Generate Summary
+                    </button>
+                    {% endif %}
+                    
+                    <a href="{% url 'summarizer:create_summary' %}" class="btn btn-outline-primary">
+                        <i class="fas fa-plus-circle me-2"></i>Create New Summary
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Summary Info -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h6 class="mb-0">
+                    <i class="fas fa-info-circle me-2 text-info"></i>Summary Details
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="row text-center mb-3">
+                    <div class="col-6">
+                        <div class="h5 text-primary mb-1">{{ summary.word_count_original }}</div>
+                        <small class="text-muted">Original Words</small>
+                    </div>
+                    <div class="col-6">
+                        <div class="h5 text-success mb-1">{{ summary.word_count_summary|default:"—" }}</div>
+                        <small class="text-muted">Summary Words</small>
+                    </div>
+                </div>
+                
+                <ul class="list-unstyled small mb-0">
+                    <li class="mb-2">
+                        <strong>Type:</strong> {{ summary.get_summary_type_display }}
+                    </li>
+                    <li class="mb-2">
+                        <strong>Status:</strong> {{ summary.get_status_display }}
+                    </li>
+                    <li class="mb-2">
+                        <strong>Created:</strong> {{ summary.created_at|date:"M d, Y g:i A" }}
+                    </li>
+                    {% if summary.processed_at %}
+                    <li class="mb-2">
+                        <strong>Processed:</strong> {{ summary.processed_at|date:"M d, Y g:i A" }}
+                    </li>
+                    {% endif %}
+                    {% if summary.is_shared %}
+                    <li class="mb-2">
+                        <strong>Shared:</strong> {{ summary.shared_at|date:"M d, Y g:i A" }}
+                    </li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+
+        <!-- Processing Logs -->
+        {% if processing_logs %}
+        <div class="card mb-4">
+            <div class="card-header">
+                <h6 class="mb-0">
+                    <i class="fas fa-history me-2 text-secondary"></i>Processing History
+                </h6>
+            </div>
+            <div class="card-body">
+                {% for log in processing_logs %}
+                <div class="d-flex align-items-center mb-2">
+                    <div class="me-2">
+                        {% if log.success %}
+                            <i class="fas fa-check-circle text-success"></i>
+                        {% else %}
+                            <i class="fas fa-times-circle text-danger"></i>
+                        {% endif %}
+                    </div>
+                    <div class="flex-grow-1">
+                        <div class="small">
+                            {{ log.created_at|date:"M d, g:i A" }}
+                            {% if log.processing_time %}
+                            ({{ log.processing_time|floatformat:1 }}s)
+                            {% endif %}
+                        </div>
+                        {% if not log.success and log.error_message %}
+                        <div class="text-danger small">{{ log.error_message|truncatewords:5 }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Share History -->
+        {% if share_logs %}
+        <div class="card">
+            <div class="card-header">
+                <h6 class="mb-0">
+                    <i class="fas fa-share-alt me-2 text-success"></i>Share History
+                </h6>
+            </div>
+            <div class="card-body">
+                {% for log in share_logs %}
+                <div class="mb-2">
+                    <div class="d-flex align-items-center">
+                        <div class="me-2">
+                            {% if log.success %}
+                                <i class="fas fa-check-circle text-success"></i>
+                            {% else %}
+                                <i class="fas fa-times-circle text-danger"></i>
+                            {% endif %}
+                        </div>
+                        <div class="flex-grow-1">
+                            <div class="small">{{ log.shared_at|date:"M d, g:i A" }}</div>
+                            <div class="text-muted small">{{ log.recipient_emails|truncatewords:3 }}</div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Share Modal -->
+<div class="modal fade" id="shareModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-share me-2 text-primary"></i>Share Summary via Email
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="shareForm">
+                    <div class="mb-3">
+                        <label for="recipientEmails" class="form-label">Recipient Emails</label>
+                        <textarea class="form-control" id="recipientEmails" rows="3" 
+                                  placeholder="Enter email addresses separated by commas..."></textarea>
+                        <div class="form-text">Enter multiple email addresses separated by commas</div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="customMessage" class="form-label">Custom Message (Optional)</label>
+                        <textarea class="form-control" id="customMessage" rows="4" 
+                                  placeholder="Add a personal message to include with the summary..."></textarea>
+                    </div>
+                    
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <strong>Email Preview:</strong> The email will include the summary title, content, and your custom message if provided.
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="sendShare()">
+                    <i class="fas fa-paper-plane me-2"></i>Send Email
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function generateSummary() {
+    const button = $('#generateBtn');
+    const originalContent = button.html();
+    
+    // Show loading state
+    button.html('<i class="fas fa-spinner fa-spin me-2"></i>Generating...').prop('disabled', true);
+    
+    $.ajax({
+        url: `/summary/{{ summary.id }}/generate/`,
+        method: 'POST',
+        success: function(response) {
+            if (response.success) {
+                // Update the summary content with proper formatting
+                $('#summaryContent').html(`
+                    <div class="ai-summary">
+                        <div class="ai-content">${formatAIText(response.summary)}</div>
+                    </div>
+                `);
+                
+                // Show success message
+                showAlert('success', 'Summary generated successfully in ' + response.processing_time.toFixed(1) + ' seconds!');
+                
+                // Reload page to show updated status
+                setTimeout(() => {
+                    window.location.reload();
+                }, 2000);
+            } else {
+                showAlert('danger', 'Error: ' + response.error);
+                
+                // Restore button
+                button.html(originalContent).prop('disabled', false);
+            }
+        },
+        error: function() {
+            showAlert('danger', 'An error occurred while processing the summary.');
+            
+            // Restore button
+            button.html(originalContent).prop('disabled', false);
+        }
+    });
+}
+
+function toggleEditMode() {
+    $('#editSection').toggle();
+}
+
+function cancelEdit() {
+    $('#editSection').hide();
+    $('#editTextarea').val('{{ summary.get_final_summary|escapejs }}');
+}
+
+function saveSummary() {
+    const editedContent = $('#editTextarea').val().trim();
+    
+    if (!editedContent) {
+        alert('Summary cannot be empty.');
+        return;
+    }
+    
+    $.ajax({
+        url: `/summary/{{ summary.id }}/edit/`,
+        method: 'POST',
+        data: {
+            edited_summary: editedContent
+        },
+        success: function(response) {
+            if (response.success) {
+                // Update the display with proper formatting
+                $('#summaryContent').html(`
+                    <div class="alert alert-info small">
+                        <i class="fas fa-edit me-2"></i>
+                        <strong>Note:</strong> This summary has been edited by you.
+                    </div>
+                    <div class="edited-summary">
+                        <div class="ai-content">${formatAIText(editedContent)}</div>
+                    </div>
+                `);
+                
+                $('#editSection').hide();
+                showAlert('success', response.message);
+            } else {
+                showAlert('danger', 'Error: ' + response.error);
+            }
+        },
+        error: function() {
+            showAlert('danger', 'An error occurred while saving the summary.');
+        }
+    });
+}
+
+function sendShare() {
+    const emails = $('#recipientEmails').val().trim();
+    const message = $('#customMessage').val().trim();
+    
+    if (!emails) {
+        showAlert('warning', 'Please enter at least one email address.');
+        return;
+    }
+    
+    // Show loading state
+    const button = event.target;
+    const originalContent = button.innerHTML;
+    button.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Sending...';
+    button.disabled = true;
+    
+    $.ajax({
+        url: `/summary/{{ summary.id }}/share/`,
+        method: 'POST',
+        data: {
+            recipient_emails: emails,
+            custom_message: message
+        },
+        success: function(response) {
+            if (response.success) {
+                $('#shareModal').modal('hide');
+                showAlert('success', response.message);
+                
+                // Clear form
+                $('#recipientEmails').val('');
+                $('#customMessage').val('');
+                
+                // Reload page to show updated sharing status
+                setTimeout(() => {
+                    window.location.reload();
+                }, 2000);
+            } else {
+                showAlert('danger', 'Error: ' + response.error);
+            }
+        },
+        error: function() {
+            showAlert('danger', 'An error occurred while sending the email.');
+        },
+        complete: function() {
+            // Restore button
+            button.innerHTML = originalContent;
+            button.disabled = false;
+        }
+    });
+}
+
+function showAlert(type, message) {
+    const alert = `
+        <div class="alert alert-${type} alert-dismissible fade show" role="alert">
+            <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'danger' ? 'exclamation-circle' : 'info-circle'} me-2"></i>
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    `;
+    
+    // Insert at the top of the content
+    $('.h2').after(alert);
+    
+    // Auto-hide after 5 seconds
+    setTimeout(() => {
+        $('.alert').fadeOut();
+    }, 5000);
+}
+
+function formatAIText(text) {
+    /**
+     * Format AI-generated text on the client side
+     */
+    if (!text) return '';
+    
+    let formatted = text;
+    
+    // Convert line breaks to HTML
+    formatted = formatted.replace(/\n\n/g, '</p><p class="ai-paragraph">');
+    formatted = formatted.replace(/\n/g, '<br>');
+    
+    // Handle bullet points
+    formatted = formatted.replace(/^\* (.+)$/gm, '<li class="ai-list-item">$1</li>');
+    formatted = formatted.replace(/^- (.+)$/gm, '<li class="ai-list-item">$1</li>');
+    
+    // Wrap consecutive list items in ul tags
+    formatted = formatted.replace(/(<li class="ai-list-item">.*?<\/li>)(\s*<li class="ai-list-item">.*?<\/li>)*/gs, 
+        '<ul class="ai-bullet-list">$&</ul>');
+    
+    // Handle numbered lists
+    formatted = formatted.replace(/^\d+\. (.+)$/gm, '<li class="ai-list-item">$1</li>');
+    formatted = formatted.replace(/(<li class="ai-list-item">.*?<\/li>)(\s*<li class="ai-list-item">.*?<\/li>)*/gs, 
+        '<ol class="ai-numbered-list">$&</ol>');
+    
+    // Handle bold text
+    formatted = formatted.replace(/\*\*(.*?)\*\*/g, '<strong class="ai-bold">$1</strong>');
+    formatted = formatted.replace(/__(.*?)__/g, '<strong class="ai-bold">$1</strong>');
+    
+    // Handle italic text
+    formatted = formatted.replace(/\*(.*?)\*/g, '<em class="ai-italic">$1</em>');
+    formatted = formatted.replace(/_(.*?)_/g, '<em class="ai-italic">$1</em>');
+    
+    // Handle code text
+    formatted = formatted.replace(/`(.*?)`/g, '<code class="ai-code">$1</code>');
+    
+    // Handle headings (lines ending with :)
+    formatted = formatted.replace(/^(.{1,100}):$/gm, '<h4 class="ai-heading">$1</h4>');
+    
+    // Wrap in paragraphs if not already wrapped
+    if (!formatted.includes('<p') && !formatted.includes('<ul') && !formatted.includes('<ol') && !formatted.includes('<h')) {
+        formatted = '<p class="ai-paragraph">' + formatted + '</p>';
+    }
+    
+    return formatted;
+}
+
+// Auto-refresh for processing status
+{% if summary.status == 'processing' %}
+setTimeout(() => {
+    window.location.reload();
+}, 5000);
+{% endif %}
+</script>
+{% endblock %}

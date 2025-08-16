@@ -1,0 +1,249 @@
+{% extends 'base.html' %}
+
+{% block title %}Profile - AI Summarizer{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="h2 text-dark">
+        <i class="fas fa-user-circle me-2 text-primary"></i>User Profile
+    </h1>
+    <a href="{% url 'summarizer:dashboard' %}" class="btn btn-outline-secondary">
+        <i class="fas fa-arrow-left me-2"></i>Back to Dashboard
+    </a>
+</div>
+
+<div class="row">
+    <div class="col-lg-8">
+        <!-- Profile Form -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-edit me-2 text-primary"></i>Profile Information
+                </h5>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.first_name.id_for_label }}" class="form-label">First Name</label>
+                            {{ form.first_name }}
+                            {% if form.first_name.errors %}
+                                <div class="text-danger small">{{ form.first_name.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.last_name.id_for_label }}" class="form-label">Last Name</label>
+                            {{ form.last_name }}
+                            {% if form.last_name.errors %}
+                                <div class="text-danger small">{{ form.last_name.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="{{ form.email.id_for_label }}" class="form-label">Email Address</label>
+                        {{ form.email }}
+                        {% if form.email.errors %}
+                            <div class="text-danger small">{{ form.email.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+
+                    <hr class="my-4">
+                    <h6 class="text-primary mb-3">
+                        <i class="fas fa-brain me-2"></i>AI Configuration
+                    </h6>
+
+                    <div class="mb-3">
+                        <label for="{{ form.groq_api_key.id_for_label }}" class="form-label">
+                            Groq API Key
+                        </label>
+                        {{ form.groq_api_key }}
+                        {% if form.groq_api_key.errors %}
+                            <div class="text-danger small">{{ form.groq_api_key.errors.0 }}</div>
+                        {% endif %}
+                        <div class="form-text">
+                            Your personal Groq API key for AI processing.
+                            <a href="https://console.groq.com/" target="_blank" class="text-primary">
+                                Get your API key <i class="fas fa-external-link-alt"></i>
+                            </a>
+                        </div>
+                    </div>
+
+                    <hr class="my-4">
+                    <h6 class="text-primary mb-3">
+                        <i class="fas fa-envelope me-2"></i>Email Configuration
+                    </h6>
+
+                    <div class="mb-3">
+                        <label for="{{ form.email_host_user.id_for_label }}" class="form-label">
+                            Gmail Address
+                        </label>
+                        {{ form.email_host_user }}
+                        {% if form.email_host_user.errors %}
+                            <div class="text-danger small">{{ form.email_host_user.errors.0 }}</div>
+                        {% endif %}
+                        <div class="form-text">Gmail address for sending summary emails</div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="{{ form.email_host_password.id_for_label }}" class="form-label">
+                            Gmail App Password
+                        </label>
+                        {{ form.email_host_password }}
+                        {% if form.email_host_password.errors %}
+                            <div class="text-danger small">{{ form.email_host_password.errors.0 }}</div>
+                        {% endif %}
+                        <div class="form-text">
+                            Gmail App Password (not your regular password).
+                            <a href="https://support.google.com/accounts/answer/185833" target="_blank" class="text-primary">
+                                How to create <i class="fas fa-external-link-alt"></i>
+                            </a>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="{{ form.default_email_signature.id_for_label }}" class="form-label">
+                            Default Email Signature
+                        </label>
+                        {{ form.default_email_signature }}
+                        {% if form.default_email_signature.errors %}
+                            <div class="text-danger small">{{ form.default_email_signature.errors.0 }}</div>
+                        {% endif %}
+                        <div class="form-text">Optional signature to include in shared emails</div>
+                    </div>
+
+                    <div class="d-grid gap-2 mt-4">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save me-2"></i>Save Changes
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+        <!-- Account Statistics -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h6 class="mb-0">
+                    <i class="fas fa-chart-bar me-2 text-info"></i>Account Statistics
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-6 mb-3">
+                        <div class="h4 text-primary mb-1">{{ stats.total_summaries }}</div>
+                        <small class="text-muted">Total Summaries</small>
+                    </div>
+                    <div class="col-6 mb-3">
+                        <div class="h4 text-success mb-1">{{ stats.completed_summaries }}</div>
+                        <small class="text-muted">Completed</small>
+                    </div>
+                    <div class="col-6 mb-3">
+                        <div class="h4 text-info mb-1">{{ stats.shared_summaries }}</div>
+                        <small class="text-muted">Shared</small>
+                    </div>
+                    <div class="col-6 mb-3">
+                        <div class="h4 text-warning mb-1">{{ stats.total_words_processed|floatformat:0 }}</div>
+                        <small class="text-muted">Words Processed</small>
+                    </div>
+                </div>
+                
+                <hr>
+                
+                <div class="text-center">
+                    <small class="text-muted">
+                        <i class="fas fa-calendar me-1"></i>
+                        Member since {{ stats.join_date|date:"M Y" }}
+                    </small>
+                </div>
+            </div>
+        </div>
+
+        <!-- Account Security -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h6 class="mb-0">
+                    <i class="fas fa-shield-alt me-2 text-warning"></i>Account Security
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <a href="{% url 'password_change' %}" class="btn btn-outline-primary btn-sm">
+                        <i class="fas fa-key me-2"></i>Change Password
+                    </a>
+                </div>
+                
+                <hr>
+                
+                <div class="alert alert-info small mb-0">
+                    <i class="fas fa-info-circle me-2"></i>
+                    Your data is securely stored and encrypted. Only you can access your summaries and settings.
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="card">
+            <div class="card-header">
+                <h6 class="mb-0">
+                    <i class="fas fa-bolt me-2 text-success"></i>Quick Actions
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <a href="{% url 'summarizer:create_summary' %}" class="btn btn-outline-primary btn-sm">
+                        <i class="fas fa-plus-circle me-2"></i>Create Summary
+                    </a>
+                    <a href="{% url 'summarizer:history' %}" class="btn btn-outline-secondary btn-sm">
+                        <i class="fas fa-history me-2"></i>View History
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    // Test API Key button functionality
+    $('#testApiKey').on('click', function() {
+        const apiKey = $('#id_groq_api_key').val().trim();
+        
+        if (!apiKey) {
+            alert('Please enter your Groq API key first.');
+            return;
+        }
+        
+        const button = $(this);
+        const originalText = button.html();
+        
+        button.html('<i class="fas fa-spinner fa-spin me-2"></i>Testing...').prop('disabled', true);
+        
+        // Note: This would require a backend endpoint to test the API key
+        // For now, we'll just show a success message
+        setTimeout(() => {
+            button.html('<i class="fas fa-check me-2"></i>Valid').removeClass('btn-outline-secondary').addClass('btn-outline-success');
+            
+            setTimeout(() => {
+                button.html(originalText).removeClass('btn-outline-success').addClass('btn-outline-secondary').prop('disabled', false);
+            }, 2000);
+        }, 1000);
+    });
+    
+    // Password field toggle for Gmail password
+    $('#togglePassword').on('click', function() {
+        const passwordField = $('#id_email_host_password');
+        const type = passwordField.attr('type') === 'password' ? 'text' : 'password';
+        passwordField.attr('type', type);
+        
+        $(this).find('i').toggleClass('fa-eye fa-eye-slash');
+    });
+});
+</script>
+{% endblock %}

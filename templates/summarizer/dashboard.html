@@ -1,0 +1,235 @@
+{% extends 'base.html' %}
+{% load formatting_filters %}
+
+{% block title %}Dashboard - AI Summarizer{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="h2 text-dark">
+        <i class="fas fa-tachometer-alt me-2 text-primary"></i>
+        Welcome back, {{ user.get_full_name|default:user.username }}!
+    </h1>
+    <a href="{% url 'summarizer:create_summary' %}" class="btn btn-primary">
+        <i class="fas fa-plus-circle me-2"></i>New Summary
+    </a>
+</div>
+
+<!-- Statistics Cards -->
+<div class="row mb-4">
+    <div class="col-md-3 mb-3">
+        <div class="card stats-card">
+            <div class="number">{{ total_summaries }}</div>
+            <div class="label">Total Summaries</div>
+        </div>
+    </div>
+    <div class="col-md-3 mb-3">
+        <div class="card" style="background: linear-gradient(135deg, #059669, #047857); color: white; padding: 24px; text-align: center;">
+            <div class="number">{{ completed_summaries }}</div>
+            <div class="label">Completed</div>
+        </div>
+    </div>
+    <div class="col-md-3 mb-3">
+        <div class="card" style="background: linear-gradient(135deg, #d97706, #b45309); color: white; padding: 24px; text-align: center;">
+            <div class="number">{{ pending_summaries }}</div>
+            <div class="label">Pending</div>
+        </div>
+    </div>
+    <div class="col-md-3 mb-3">
+        <div class="card" style="background: linear-gradient(135deg, #7c3aed, #6d28d9); color: white; padding: 24px; text-align: center;">
+            <div class="number">{{ shared_summaries }}</div>
+            <div class="label">Shared</div>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Actions -->
+<div class="row mb-4">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-bolt me-2 text-warning"></i>Quick Actions
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <a href="{% url 'summarizer:create_summary' %}" class="btn btn-outline-primary w-100 h-100 d-flex flex-column align-items-center justify-content-center py-3">
+                            <i class="fas fa-plus-circle fa-2x mb-2"></i>
+                            <span class="fw-semibold">Create New Summary</span>
+                            <small class="text-muted">Upload text or documents</small>
+                        </a>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <a href="{% url 'summarizer:history' %}" class="btn btn-outline-secondary w-100 h-100 d-flex flex-column align-items-center justify-content-center py-3">
+                            <i class="fas fa-history fa-2x mb-2"></i>
+                            <span class="fw-semibold">View All Summaries</span>
+                            <small class="text-muted">Browse your history</small>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h6 class="mb-0">
+                    <i class="fas fa-info-circle me-2 text-info"></i>Tips
+                </h6>
+            </div>
+            <div class="card-body">
+                <ul class="list-unstyled small mb-0">
+                    <li class="mb-2">
+                        <i class="fas fa-lightbulb text-warning me-2"></i>
+                        Use specific prompts for better results
+                    </li>
+                    <li class="mb-2">
+                        <i class="fas fa-file-alt text-info me-2"></i>
+                        Supports .txt, .md, and .docx files
+                    </li>
+                    <li class="mb-0">
+                        <i class="fas fa-share text-success me-2"></i>
+                        Share summaries directly via email
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Summaries -->
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">
+            <i class="fas fa-clock me-2 text-primary"></i>Recent Summaries
+        </h5>
+        {% if recent_summaries %}
+        <a href="{% url 'summarizer:history' %}" class="btn btn-outline-primary btn-sm">
+            View All
+        </a>
+        {% endif %}
+    </div>
+    <div class="card-body">
+        {% if recent_summaries %}
+            {% for summary in recent_summaries %}
+            <div class="summary-item">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div class="flex-grow-1">
+                        <h6 class="summary-title">
+                            <a href="{% url 'summarizer:view_summary' summary.id %}" class="text-decoration-none">
+                                {{ summary.title }}
+                            </a>
+                        </h6>
+                        <div class="summary-meta">
+                            <span class="badge badge-{{ summary.status }}">{{ summary.get_status_display }}</span>
+                            <span class="text-muted ms-2">
+                                <i class="fas fa-calendar me-1"></i>{{ summary.created_at|date:"M d, Y" }}
+                            </span>
+                            <span class="text-muted ms-2">
+                                <i class="fas fa-file-text me-1"></i>{{ summary.word_count_original }} words
+                            </span>
+                            {% if summary.is_shared %}
+                            <span class="text-success ms-2">
+                                <i class="fas fa-share-alt me-1"></i>Shared
+                            </span>
+                            {% endif %}
+                        </div>
+                        <div class="summary-preview mt-2">
+                            {% if summary.ai_generated_summary %}
+                                <div class="ai-content text-muted small">{{ summary.ai_generated_summary|smart_format|truncatewords:20 }}</div>
+                            {% else %}
+                                <div class="text-muted small">{{ summary.original_text|truncatewords:20 }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="ms-3">
+                        <div class="btn-group-vertical" role="group">
+                            <a href="{% url 'summarizer:view_summary' summary.id %}" class="btn btn-outline-primary btn-sm">
+                                <i class="fas fa-eye"></i>
+                            </a>
+                            {% if summary.status == 'draft' %}
+                            <button class="btn btn-outline-success btn-sm" onclick="generateSummary({{ summary.id }})">
+                                <i class="fas fa-magic"></i>
+                            </button>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <div class="text-center py-5">
+                <i class="fas fa-file-alt fa-3x text-muted mb-3"></i>
+                <h5 class="text-muted">No summaries yet</h5>
+                <p class="text-muted mb-4">Create your first summary to get started!</p>
+                <a href="{% url 'summarizer:create_summary' %}" class="btn btn-primary">
+                    <i class="fas fa-plus-circle me-2"></i>Create Your First Summary
+                </a>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function generateSummary(summaryId) {
+    const button = event.target.closest('button');
+    const originalContent = button.innerHTML;
+    
+    // Show loading state
+    button.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+    button.disabled = true;
+    
+    $.ajax({
+        url: `/summary/${summaryId}/generate/`,
+        method: 'POST',
+        success: function(response) {
+            if (response.success) {
+                // Show success message
+                const alert = `
+                    <div class="alert alert-success alert-dismissible fade show" role="alert">
+                        <i class="fas fa-check-circle me-2"></i>Summary generated successfully!
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                `;
+                $('.card-body').prepend(alert);
+                
+                // Reload page to show updated status
+                setTimeout(() => {
+                    window.location.reload();
+                }, 1500);
+            } else {
+                // Show error message
+                const alert = `
+                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                        <i class="fas fa-exclamation-circle me-2"></i>Error: ${response.error}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                `;
+                $('.card-body').prepend(alert);
+                
+                // Restore button
+                button.innerHTML = originalContent;
+                button.disabled = false;
+            }
+        },
+        error: function() {
+            // Show error message
+            const alert = `
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    <i class="fas fa-exclamation-circle me-2"></i>An error occurred while processing the summary.
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            `;
+            $('.card-body').prepend(alert);
+            
+            // Restore button
+            button.innerHTML = originalContent;
+            button.disabled = false;
+        }
+    });
+}
+</script>
+{% endblock %}

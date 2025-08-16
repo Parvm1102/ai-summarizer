@@ -1,0 +1,270 @@
+{% extends 'base.html' %}
+
+{% block title %}AI Summarizer - Smart Meeting Notes & Document Summarization{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<div class="text-center py-5 mb-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <h1 class="display-4 fw-bold text-primary mb-4">
+                <i class="fas fa-brain me-3"></i>AI Summarizer
+            </h1>
+            <p class="lead text-secondary mb-4">
+                Transform your meeting notes, call transcripts, and documents into clear, actionable summaries 
+                using advanced AI technology powered by Groq.
+            </p>
+            
+            {% if not user.is_authenticated %}
+            <div class="d-flex gap-3 justify-content-center flex-wrap">
+                <a href="{% url 'register' %}" class="btn btn-primary btn-lg px-4">
+                    <i class="fas fa-rocket me-2"></i>Get Started Free
+                </a>
+                <a href="{% url 'login' %}" class="btn btn-outline-primary btn-lg px-4">
+                    <i class="fas fa-sign-in-alt me-2"></i>Sign In
+                </a>
+            </div>
+            {% else %}
+            <div class="d-flex gap-3 justify-content-center flex-wrap">
+                <a href="{% url 'summarizer:dashboard' %}" class="btn btn-primary btn-lg px-4">
+                    <i class="fas fa-tachometer-alt me-2"></i>Go to Dashboard
+                </a>
+                <a href="{% url 'summarizer:create_summary' %}" class="btn btn-outline-primary btn-lg px-4">
+                    <i class="fas fa-plus-circle me-2"></i>Create Summary
+                </a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Features Section -->
+<div class="row mb-5">
+    <div class="col-12">
+        <h2 class="text-center mb-5 text-dark">
+            <i class="fas fa-star me-2 text-warning"></i>Why Choose AI Summarizer?
+        </h2>
+    </div>
+    
+    <div class="col-md-4 mb-4">
+        <div class="card h-100 text-center border-0 shadow-custom">
+            <div class="card-body p-4">
+                <div class="text-primary mb-3">
+                    <i class="fas fa-upload fa-3x"></i>
+                </div>
+                <h5 class="card-title text-dark">Easy Upload</h5>
+                <p class="card-text text-secondary">
+                    Upload text files, paste content directly, or drag and drop documents. 
+                    Supports .txt, .md, and .docx formats.
+                </p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4 mb-4">
+        <div class="card h-100 text-center border-0 shadow-custom">
+            <div class="card-body p-4">
+                <div class="text-success mb-3">
+                    <i class="fas fa-magic fa-3x"></i>
+                </div>
+                <h5 class="card-title text-dark">Custom AI Prompts</h5>
+                <p class="card-text text-secondary">
+                    Give specific instructions like "Summarize for executives" or "Focus on action items" 
+                    for tailored results.
+                </p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4 mb-4">
+        <div class="card h-100 text-center border-0 shadow-custom">
+            <div class="card-body p-4">
+                <div class="text-info mb-3">
+                    <i class="fas fa-edit fa-3x"></i>
+                </div>
+                <h5 class="card-title text-dark">Edit & Refine</h5>
+                <p class="card-text text-secondary">
+                    AI-generated summaries are fully editable. Refine and customize 
+                    before sharing with your team.
+                </p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4 mb-4">
+        <div class="card h-100 text-center border-0 shadow-custom">
+            <div class="card-body p-4">
+                <div class="text-warning mb-3">
+                    <i class="fas fa-share-alt fa-3x"></i>
+                </div>
+                <h5 class="card-title text-dark">One-Click Sharing</h5>
+                <p class="card-text text-secondary">
+                    Share summaries via email to multiple recipients with personalized messages 
+                    directly from your Gmail account.
+                </p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4 mb-4">
+        <div class="card h-100 text-center border-0 shadow-custom">
+            <div class="card-body p-4">
+                <div class="text-danger mb-3">
+                    <i class="fas fa-shield-alt fa-3x"></i>
+                </div>
+                <h5 class="card-title text-dark">Secure & Private</h5>
+                <p class="card-text text-secondary">
+                    Your data is securely stored with user isolation. Each account can only 
+                    access their own summaries and settings.
+                </p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4 mb-4">
+        <div class="card h-100 text-center border-0 shadow-custom">
+            <div class="card-body p-4">
+                <div class="text-primary mb-3">
+                    <i class="fas fa-chart-line fa-3x"></i>
+                </div>
+                <h5 class="card-title text-dark">Track & Monitor</h5>
+                <p class="card-text text-secondary">
+                    View processing history, sharing logs, and usage statistics 
+                    to track your productivity gains.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- How It Works Section -->
+<div class="row mb-5 py-5 bg-light-custom rounded">
+    <div class="col-12">
+        <h2 class="text-center mb-5 text-dark">
+            <i class="fas fa-cogs me-2 text-primary"></i>How It Works
+        </h2>
+    </div>
+    
+    <div class="col-md-3 text-center mb-4">
+        <div class="bg-primary text-white rounded-circle d-inline-flex align-items-center justify-content-center" 
+             style="width: 80px; height: 80px; font-size: 2rem; margin-bottom: 1rem;">
+            1
+        </div>
+        <h5 class="text-dark">Upload Content</h5>
+        <p class="text-secondary">Upload your meeting notes, call transcripts, or documents</p>
+    </div>
+    
+    <div class="col-md-3 text-center mb-4">
+        <div class="bg-success text-white rounded-circle d-inline-flex align-items-center justify-content-center" 
+             style="width: 80px; height: 80px; font-size: 2rem; margin-bottom: 1rem;">
+            2
+        </div>
+        <h5 class="text-dark">Add Instructions</h5>
+        <p class="text-secondary">Provide custom prompts for how you want the AI to summarize</p>
+    </div>
+    
+    <div class="col-md-3 text-center mb-4">
+        <div class="bg-info text-white rounded-circle d-inline-flex align-items-center justify-content-center" 
+             style="width: 80px; height: 80px; font-size: 2rem; margin-bottom: 1rem;">
+            3
+        </div>
+        <h5 class="text-dark">AI Processing</h5>
+        <p class="text-secondary">Advanced AI generates structured summaries in seconds</p>
+    </div>
+    
+    <div class="col-md-3 text-center mb-4">
+        <div class="bg-warning text-white rounded-circle d-inline-flex align-items-center justify-content-center" 
+             style="width: 80px; height: 80px; font-size: 2rem; margin-bottom: 1rem;">
+            4
+        </div>
+        <h5 class="text-dark">Share & Collaborate</h5>
+        <p class="text-secondary">Edit, refine, and share with your team via email</p>
+    </div>
+</div>
+
+<!-- Use Cases Section -->
+<div class="row mb-5">
+    <div class="col-12">
+        <h2 class="text-center mb-5 text-dark">
+            <i class="fas fa-lightbulb me-2 text-warning"></i>Perfect For
+        </h2>
+    </div>
+    
+    <div class="col-lg-6 mb-4">
+        <div class="card border-0 shadow-custom">
+            <div class="card-body p-4">
+                <h5 class="card-title text-primary">
+                    <i class="fas fa-users me-2"></i>Meeting Notes
+                </h5>
+                <ul class="list-unstyled text-secondary">
+                    <li><i class="fas fa-check text-success me-2"></i>Transform long meeting transcripts into actionable summaries</li>
+                    <li><i class="fas fa-check text-success me-2"></i>Highlight key decisions and action items</li>
+                    <li><i class="fas fa-check text-success me-2"></i>Share with stakeholders who missed the meeting</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-6 mb-4">
+        <div class="card border-0 shadow-custom">
+            <div class="card-body p-4">
+                <h5 class="card-title text-info">
+                    <i class="fas fa-phone me-2"></i>Call Transcripts
+                </h5>
+                <ul class="list-unstyled text-secondary">
+                    <li><i class="fas fa-check text-success me-2"></i>Summarize client calls and support conversations</li>
+                    <li><i class="fas fa-check text-success me-2"></i>Extract key points and follow-up tasks</li>
+                    <li><i class="fas fa-check text-success me-2"></i>Create professional summaries for team updates</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-6 mb-4">
+        <div class="card border-0 shadow-custom">
+            <div class="card-body p-4">
+                <h5 class="card-title text-success">
+                    <i class="fas fa-file-alt me-2"></i>Documents
+                </h5>
+                <ul class="list-unstyled text-secondary">
+                    <li><i class="fas fa-check text-success me-2"></i>Condense lengthy reports and documents</li>
+                    <li><i class="fas fa-check text-success me-2"></i>Create executive summaries</li>
+                    <li><i class="fas fa-check text-success me-2"></i>Extract key insights for quick review</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-6 mb-4">
+        <div class="card border-0 shadow-custom">
+            <div class="card-body p-4">
+                <h5 class="card-title text-warning">
+                    <i class="fas fa-chart-bar me-2"></i>Research & Analysis</h5>
+                <ul class="list-unstyled text-secondary">
+                    <li><i class="fas fa-check text-success me-2"></i>Summarize research findings and data</li>
+                    <li><i class="fas fa-check text-success me-2"></i>Create digestible reports for decision makers</li>
+                    <li><i class="fas fa-check text-success me-2"></i>Share insights with different audiences</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- CTA Section -->
+{% if not user.is_authenticated %}
+<div class="text-center py-5 bg-primary text-white rounded mb-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <h2 class="mb-4">Ready to Get Started?</h2>
+            <p class="lead mb-4">
+                Join thousands of professionals who are saving time and improving communication 
+                with AI-powered summaries.
+            </p>
+            <a href="{% url 'register' %}" class="btn btn-light btn-lg px-5">
+                <i class="fas fa-rocket me-2"></i>Start Free Today
+            </a>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

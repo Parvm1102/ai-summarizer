@@ -1,0 +1,305 @@
+{% extends 'base.html' %}
+{% load formatting_filters %}
+
+{% block title %}Create Summary - AI Summarizer{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="h2 text-dark">
+        <i class="fas fa-plus-circle me-2 text-primary"></i>Create New Summary
+    </h1>
+    <a href="{% url 'summarizer:dashboard' %}" class="btn btn-outline-secondary">
+        <i class="fas fa-arrow-left me-2"></i>Back to Dashboard
+    </a>
+</div>
+
+<div class="row">
+    <div class="col-lg-8">
+        <form method="post" enctype="multipart/form-data" id="summaryForm">
+            {% csrf_token %}
+            
+            <!-- Basic Information -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-info-circle me-2 text-primary"></i>Summary Information
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-8 mb-3">
+                            <label for="{{ form.title.id_for_label }}" class="form-label">Title <span class="text-danger">*</span></label>
+                            {{ form.title }}
+                            {% if form.title.errors %}
+                                <div class="text-danger small">{{ form.title.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label for="{{ form.summary_type.id_for_label }}" class="form-label">Type</label>
+                            {{ form.summary_type }}
+                            {% if form.summary_type.errors %}
+                                <div class="text-danger small">{{ form.summary_type.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="{{ form.custom_prompt.id_for_label }}" class="form-label">
+                            Custom Instructions <span class="text-muted">(Optional)</span>
+                        </label>
+                        {{ form.custom_prompt }}
+                        {% if form.custom_prompt.errors %}
+                            <div class="text-danger small">{{ form.custom_prompt.errors.0 }}</div>
+                        {% endif %}
+                        <div class="form-text">{{ form.custom_prompt.help_text }}</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Content Input -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-file-text me-2 text-success"></i>Content Input
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <!-- File Upload -->
+                    <div class="mb-4">
+                        <label for="{{ form.file_upload.id_for_label }}" class="form-label">
+                            <i class="fas fa-upload me-2"></i>Upload File
+                        </label>
+                        <div class="file-upload-area" id="fileUploadArea">
+                            {{ form.file_upload }}
+                            <div class="upload-text">
+                                <i class="fas fa-cloud-upload-alt fa-2x text-primary mb-2"></i>
+                                <p class="mb-1">Click to upload or drag and drop</p>
+                                <small class="text-muted">Supports .txt, .md, .docx files (max 5MB)</small>
+                            </div>
+                        </div>
+                        {% if form.file_upload.errors %}
+                            <div class="text-danger small mt-2">{{ form.file_upload.errors.0 }}</div>
+                        {% endif %}
+                        <div class="form-text">{{ form.file_upload.help_text }}</div>
+                    </div>
+
+                    <div class="text-center mb-3">
+                        <span class="badge bg-secondary">OR</span>
+                    </div>
+
+                    <!-- Text Input -->
+                    <div class="mb-3">
+                        <label for="{{ form.text_input.id_for_label }}" class="form-label">
+                            <i class="fas fa-keyboard me-2"></i>Paste Text Content
+                        </label>
+                        {{ form.text_input }}
+                        <div class="d-flex justify-content-between mt-2">
+                            <div class="form-text">{{ form.text_input.help_text }}</div>
+                            <small class="text-muted" id="charCount">0 characters</small>
+                        </div>
+                        {% if form.text_input.errors %}
+                            <div class="text-danger small">{{ form.text_input.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Submit Button -->
+            <div class="d-grid gap-2 mb-4">
+                <button type="submit" class="btn btn-primary btn-lg">
+                    <i class="fas fa-magic me-2"></i>Create Summary
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Help Sidebar -->
+    <div class="col-lg-4">
+        <div class="card">
+            <div class="card-header">
+                <h6 class="mb-0">
+                    <i class="fas fa-lightbulb me-2 text-warning"></i>Tips for Better Summaries
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <h6 class="text-primary">Custom Instructions Examples:</h6>
+                    <ul class="list-unstyled small">
+                        <li class="mb-2">
+                            <code>"Summarize in bullet points for executives"</code>
+                        </li>
+                        <li class="mb-2">
+                            <code>"Focus only on action items and deadlines"</code>
+                        </li>
+                        <li class="mb-2">
+                            <code>"Create a summary for team members who missed the meeting"</code>
+                        </li>
+                        <li class="mb-2">
+                            <code>"Highlight key decisions and next steps"</code>
+                        </li>
+                    </ul>
+                </div>
+                
+                <div class="mb-3">
+                    <h6 class="text-success">Supported File Types:</h6>
+                    <ul class="list-unstyled small">
+                        <li><i class="fas fa-file-alt text-primary me-2"></i>.txt - Plain text files</li>
+                        <li><i class="fab fa-markdown text-info me-2"></i>.md - Markdown files</li>
+                        <li><i class="fas fa-file-word text-primary me-2"></i>.docx - Word documents</li>
+                    </ul>
+                </div>
+
+                <div class="alert alert-info small">
+                    <i class="fas fa-info-circle me-2"></i>
+                    <strong>Pro Tip:</strong> For best results, ensure your text is well-structured with clear sections and paragraphs.
+                </div>
+            </div>
+        </div>
+
+        <div class="card mt-3">
+            <div class="card-header">
+                <h6 class="mb-0">
+                    <i class="fas fa-chart-bar me-2 text-info"></i>Processing Limits
+                </h6>
+            </div>
+            <div class="card-body small">
+                <ul class="list-unstyled mb-0">
+                    <li class="mb-2">
+                        <i class="fas fa-file-upload text-primary me-2"></i>
+                        <strong>Max file size:</strong> 5MB
+                    </li>
+                    <li class="mb-2">
+                        <i class="fas fa-align-left text-success me-2"></i>
+                        <strong>Max text length:</strong> 100,000 characters
+                    </li>
+                    <li class="mb-0">
+                        <i class="fas fa-clock text-warning me-2"></i>
+                        <strong>Processing time:</strong> Usually 5-30 seconds
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.file-upload-area {
+    position: relative;
+    cursor: pointer;
+}
+
+.file-upload-area input[type="file"] {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    cursor: pointer;
+}
+
+.upload-text {
+    pointer-events: none;
+}
+
+.file-upload-area.dragover {
+    border-color: var(--primary-color) !important;
+    background-color: #e0f2fe !important;
+}
+
+.file-selected {
+    background-color: #d1fae5 !important;
+    border-color: #059669 !important;
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    // Character counter for text input
+    $('#id_text_input').on('input', function() {
+        const length = $(this).val().length;
+        $('#charCount').text(length.toLocaleString() + ' characters');
+        
+        // Warning color if approaching limit
+        if (length > 90000) {
+            $('#charCount').addClass('text-warning');
+        } else if (length > 95000) {
+            $('#charCount').addClass('text-danger').removeClass('text-warning');
+        } else {
+            $('#charCount').removeClass('text-warning text-danger');
+        }
+    });
+
+    // File upload area interactions
+    const fileArea = $('#fileUploadArea');
+    const fileInput = $('#id_file_upload');
+    
+    // Drag and drop functionality
+    fileArea.on('dragover', function(e) {
+        e.preventDefault();
+        $(this).addClass('dragover');
+    });
+    
+    fileArea.on('dragleave', function(e) {
+        e.preventDefault();
+        $(this).removeClass('dragover');
+    });
+    
+    fileArea.on('drop', function(e) {
+        e.preventDefault();
+        $(this).removeClass('dragover');
+        
+        const files = e.originalEvent.dataTransfer.files;
+        if (files.length > 0) {
+            fileInput[0].files = files;
+            updateFileDisplay(files[0]);
+        }
+    });
+    
+    // File input change
+    fileInput.on('change', function() {
+        if (this.files && this.files[0]) {
+            updateFileDisplay(this.files[0]);
+        }
+    });
+    
+    function updateFileDisplay(file) {
+        fileArea.addClass('file-selected');
+        fileArea.find('.upload-text').html(`
+            <i class="fas fa-check-circle fa-2x text-success mb-2"></i>
+            <p class="mb-1"><strong>${file.name}</strong></p>
+            <small class="text-muted">${(file.size / 1024 / 1024).toFixed(2)} MB</small>
+        `);
+        
+        // Clear text input when file is selected
+        $('#id_text_input').val('');
+        $('#charCount').text('0 characters');
+    }
+    
+    // Form validation
+    $('#summaryForm').on('submit', function(e) {
+        const title = $('#id_title').val().trim();
+        const textInput = $('#id_text_input').val().trim();
+        const fileInput = $('#id_file_upload')[0].files.length > 0;
+        
+        if (!title) {
+            e.preventDefault();
+            alert('Please enter a title for your summary.');
+            $('#id_title').focus();
+            return;
+        }
+        
+        if (!textInput && !fileInput) {
+            e.preventDefault();
+            alert('Please either upload a file or enter text content.');
+            return;
+        }
+        
+        // Show loading state
+        $(this).find('button[type="submit"]').html('<i class="fas fa-spinner fa-spin me-2"></i>Creating Summary...').prop('disabled', true);
+    });
+});
+</script>
+{% endblock %}
