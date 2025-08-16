@@ -46,6 +46,7 @@ MIDDLEWARE = [
     'whitenoise.middleware.WhiteNoiseMiddleware',  # Add WhiteNoise for static files
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
+    'summarizer.middleware.CSRFDebugMiddleware',  # Debug CSRF issues (dev only)
     'summarizer.middleware.SessionErrorMiddleware',  # Custom session error handling
     'summarizer.middleware.ImprovedCsrfMiddleware',  # Improved CSRF handling
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -194,6 +195,23 @@ CSRF_COOKIE_AGE = 31449600  # 1 year
 CSRF_COOKIE_HTTPONLY = False  # Must be False for AJAX requests
 CSRF_COOKIE_SECURE = config('CSRF_COOKIE_SECURE', default=False, cast=bool)
 CSRF_USE_SESSIONS = False  # Use cookie-based CSRF tokens
+CSRF_COOKIE_SAMESITE = 'Lax'  # Helps with cross-origin issues
+
+# CSRF Trusted Origins - Add your deployment domains here
+CSRF_TRUSTED_ORIGINS = [
+    'http://localhost:8000',
+    'http://127.0.0.1:8000',
+    'https://*.render.com',
+]
+
+# Add any custom domains from environment
+custom_domain = config('CUSTOM_DOMAIN', default='')
+if custom_domain:
+    CSRF_TRUSTED_ORIGINS.append(f'https://{custom_domain}')
+    CSRF_TRUSTED_ORIGINS.append(f'http://{custom_domain}')
+
+# Custom CSRF failure view
+CSRF_FAILURE_VIEW = 'summarizer.csrf_views.csrf_failure_view'
 
 # Security Headers
 SECURE_BROWSER_XSS_FILTER = True

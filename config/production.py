@@ -21,6 +21,25 @@ SECURE_HSTS_SECONDS = 31536000 if not DEBUG else 0
 SECURE_HSTS_INCLUDE_SUBDOMAINS = True
 SECURE_HSTS_PRELOAD = True
 
+# CSRF and Session Configuration for Production
+CSRF_COOKIE_SECURE = True  # Use HTTPS only for CSRF cookies
+CSRF_COOKIE_HTTPONLY = False  # Allow JavaScript to read CSRF token
+CSRF_COOKIE_SAMESITE = 'Lax'  # Helps with cross-origin issues
+CSRF_TRUSTED_ORIGINS = [
+    'https://*.render.com',
+    'https://your-domain.com',  # Add your custom domain if you have one
+]
+
+SESSION_COOKIE_SECURE = True  # Use HTTPS only for session cookies
+SESSION_COOKIE_HTTPONLY = True
+SESSION_COOKIE_SAMESITE = 'Lax'
+SESSION_COOKIE_AGE = 86400  # 24 hours
+
+# For Render deployment - ensure proper domain handling
+USE_X_FORWARDED_HOST = True
+USE_X_FORWARDED_PORT = True
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+
 # Use environment variables for sensitive data
 SECRET_KEY = config('SECRET_KEY', default='django-insecure-change-this-in-production')
 
