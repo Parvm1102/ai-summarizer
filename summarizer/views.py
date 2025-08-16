@@ -1,6 +1,6 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
-from django.contrib.auth import login, authenticate
+from django.contrib.auth import login, authenticate, logout
 from django.contrib import messages
 from django.http import JsonResponse
 from django.views.decorators.http import require_http_methods
@@ -310,6 +310,13 @@ def user_profile(request):
     }
     
     return render(request, 'summarizer/profile.html', context)
+
+
+def logout_view(request):
+    """Custom logout view that handles both GET and POST requests"""
+    logout(request)
+    messages.success(request, 'You have been successfully logged out.')
+    return redirect('summarizer:home')
 
 
 # Legacy method name for compatibility
