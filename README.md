@@ -41,7 +41,7 @@ A Django-based web application for AI-powered meeting notes summarization and sh
 
 1. **Clone and Setup**:
    ```bash
-   git clone <repository-url>
+   git clone https://github.com/Parvm1102/ai-summarizer.git
    cd ai-summarizer
    python -m venv venv
    source venv/bin/activate  # On Windows: venv\Scripts\activate
